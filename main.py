@@ -32,6 +32,8 @@ def read_item_data():
 
 @app.get("/items",response_model=List[Item])
 def read_item():
+    for item in db:
+        print(item)
     return db
 
 @app.get("/item/{item_id}",response_model=Item)
