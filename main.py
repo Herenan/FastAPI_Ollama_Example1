@@ -6,7 +6,12 @@ from typing import List, Optional
 import tkinter as tk
 from tkinter import BOTH, Frame, ttk, messagebox
 
+import ollama
+import requests
+
 app = FastAPI()
+
+OLLAMA_API_URL = "http://localhost:11434/api/generate"
 
 class Item(BaseModel):
     id : int
@@ -69,6 +74,30 @@ def delete_item(item_id : int):
         return db
     raise HTTPException(status_code=404, detail="Item not found")
 
+def ask_ollama():
+    user_prompt = text_in.get()
+    system_prompt = """
+    You are an expert SQL generate. You take is to convert  the user's natural languge requeste SQL Query.
+    The take you can query is names "BOOKS".
+    The "BOOKS" table has following colums: ID (INT), TITLE (VARCHAR), AUTHOR (VARCHAR), YEAR (INT).
+    -Only generate a SELECT statement.
+    -Do not generate any other DML (INSERT, UPDATE, DELETE).
+    """
+    full_prompt = f"User requests: '{user_prompt}'\n\nBased on the instruction, generate SQL query"
+    
+    payload = {
+        "model" : "gemma3:1b",
+        "system" : system_prompt,
+        "prompt" : full_prompt,
+        "stream" : False
+    }
+    
+    response = requests.post(OLLAMA_API_URL, json=payload)
+    response.raise_for_status()
+    response_text = response.json().get("response", "").strip()
+    print(response_text)
+    return response_text
+
 root = tk.Tk()
 
 root.title("FastAPI + Ollama")
@@ -76,9 +105,9 @@ root.geometry("700x500")
         
 main_frame = ttk.Frame(root, padding="20")
 main_frame.pack(fill=BOTH, expand=True)
-read_button = ttk.Button(main_frame, text="ดึงข้อมูล", command=read_item_data)
+read_button = ttk.Button(main_frame, text="ดึงข้อมูล", command=ask_ollama)
 read_button.pack(pady=10)
-text_display = ttk.Entry(main_frame, width=30, textvariable=db)
-text_display.pack(pady=10)
+text_in = ttk.Entry(main_frame, width=30)
+text_in.pack(pady=10)
 
 root.mainloop()
