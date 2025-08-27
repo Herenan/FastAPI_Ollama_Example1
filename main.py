@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 
 import tkinter as tk
+from tkinter import BOTH, Frame, ttk, messagebox
 
 app = FastAPI()
 
@@ -25,6 +26,9 @@ db = [
     Item(id=4, name="MacBook", description="Pro M1", price=65000.0),
     Item(id=5, name="MacBook", description="Pro M1", price=65000.0)
 ]
+def read_item_data():
+    for item in db:
+        print(item)
 
 @app.get("/items",response_model=List[Item])
 def read_item():
@@ -63,13 +67,16 @@ def delete_item(item_id : int):
         return db
     raise HTTPException(status_code=404, detail="Item not found")
 
-class OllamaAPP:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("FastAPI + Ollama")
-        self.root.geometry("700x500")
+root = tk.Tk()
+
+root.title("FastAPI + Ollama")
+root.geometry("700x500")
         
-if __name__=="__main__":
-    root = tk.Tk()
-    app = OllamaAPP(root)
-    root.mainloop()
+main_frame = ttk.Frame(root, padding="20")
+main_frame.pack(fill=BOTH, expand=True)
+read_button = ttk.Button(main_frame, text="ดึงข้อมูล", command=read_item_data)
+read_button.pack(pady=10)
+text_display = ttk.Entry(main_frame, width=30, textvariable=db)
+text_display.pack(pady=10)
+
+root.mainloop()
